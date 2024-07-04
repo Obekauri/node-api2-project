@@ -1,2 +1,47 @@
-// implement your server here
-// require your posts router and connect it here
+const express = require('express')
+const Posts = require('./posts/posts-model')
+const server = express()
+
+server.use(express.json())
+
+server.get('/api/posts', (req, res) => {
+    Posts.find()
+        .then(postForPage => {
+            res.json(postForPage)
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: "The posts information could not be retrieved",
+                err: err.message,
+                stack: err.stack
+            })
+        })
+})
+
+server.get('/api/posts/:id', (req, res) => {
+    Posts.findById(req.params.id)
+        .then(postForPage => {
+            if(!postForPage){
+                res.status(404).json({
+                    message: "The post with the specified ID does not exist"
+                })
+            }else{
+                res.json(postForPage)
+            }
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: "The posts information could not be retrieved",
+                err: err.message,
+                stack: err.stack
+            })
+        })
+})
+
+server.use('*', (req, res) => {
+    res.status(404).json({
+        message: 'Not found'
+    })
+})
+
+module.exports = server
