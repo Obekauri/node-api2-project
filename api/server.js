@@ -58,6 +58,62 @@ server.get('/api/posts/:id/comments', (req, res) => {
         })
 })
 
+server.post('/api/posts/', (req, res) => {
+    const postBody = req.body
+    if(!postBody.title || !postBody.contents){
+        res.status(400).json({
+            message: "Please provide title and contents for the post"
+        })
+    }else{
+        Posts.insert(postBody)
+            .then(newPost => {
+                const joinObjects = Object.assign({}, newPost, postBody)
+                res.status(201).json(joinObjects)
+            })
+            .catch(err => {
+                res.status(500).json({
+                    message: "There was an error while saving the post to the database",
+                    err: err.message,
+                    stack: err.stack
+                })
+            })
+    }
+})
+
+server.put('/api/posts/:id', async (req, res) => {
+    Posts.findById(req.params.id)
+        .then(updatePost => {
+            if(!updatePost){
+                res.status(404).json({
+                    message: "The post with the specified ID does not exist"
+                })
+            }else{
+                const bodyFromReq = req.body
+                if(!bodyFromReq.title || !bodyFromReq.contents){
+                    res.status(400).json({
+                        message: "Please provide title and contents for the post",
+                    })
+                }else{
+                    const updatedPost = {
+                        ...updatePost,
+                        ...bodyFromReq
+                    };
+                    Posts.update(updatePost.id, bodyFromReq)
+                        .then(() => {
+                            res.status(200).json(updatedPost);
+                        })
+                }
+            }
+        })
+        .catch(err => {
+            res.status(500).json({
+                message: "The post information could not be modified",
+                err: err.message,
+                stack: err.stack
+            })
+        })    
+})
+
 server.use('*', (req, res) => {
     res.status(404).json({
         message: 'Not found'
