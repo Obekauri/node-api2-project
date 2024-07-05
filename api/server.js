@@ -80,7 +80,7 @@ server.post('/api/posts/', (req, res) => {
     }
 })
 
-server.put('/api/posts/:id', async (req, res) => {
+server.put('/api/posts/:id', (req, res) => {
     Posts.findById(req.params.id)
         .then(updatePost => {
             if(!updatePost){
@@ -112,6 +112,34 @@ server.put('/api/posts/:id', async (req, res) => {
                 stack: err.stack
             })
         })    
+})
+
+server.delete('/api/posts/:id', (req, res) => {
+    Posts.findById(req.params.id)
+        .then(postToDelete => {
+            if (!postToDelete) {
+                return res.status(404).json({
+                    message: "The post with the specified ID does not exist"
+                });
+            } else {
+                Posts.remove(req.params.id)
+                    .then(() => {
+                        res.status(200).json(postToDelete);
+                    })
+                    .catch(error => {
+                        res.status(500).json({
+                            message: "There was an error while deleting the post from the database",
+                            error: error.message
+                        });
+                    });
+            }
+        })
+        .catch(error => {
+            res.status(500).json({
+                message: "There was an error retrieving the post",
+                error: error.message
+            });
+        });
 })
 
 server.use('*', (req, res) => {
